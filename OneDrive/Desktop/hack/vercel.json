@@ -1,0 +1,18 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "cyber-sentinel-react/package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "cyber-sentinel-react/dist"
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "/cyber-sentinel-react/dist/$1"
+        }
+    ]
+}
