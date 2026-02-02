@@ -1,5 +1,6 @@
-web:
-  - type: pserv
+services:
+  # 1. The Backend API (Python)
+  - type: web
     name: cyber-sentinel-api
     env: python
     region: singapore
@@ -9,4 +10,23 @@ web:
     startCommand: uvicorn honeypot_api:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11
+        value: 3.11.5
+
+  # 2. The Frontend (React Static Site)
+  - type: web
+    name: cyber-sentinel-frontend
+    env: static
+    branch: main
+    repo: https://github.com/Prashant9998/agentic-AI-honeypot
+    buildCommand: cd cyber-sentinel-react && npm install && npm run build
+    staticPublishPath: ./cyber-sentinel-react/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: cyber-sentinel-api
+          property: url

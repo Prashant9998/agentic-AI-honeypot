@@ -25,8 +25,9 @@ function ApiTester({ onBack }) {
     const [authResponse, setAuthResponse] = useState('Click "Test Unauthorized Access"...');
 
     useEffect(() => {
-        // Auto-detect API base URL
-        setApiUrl(window.location.origin);
+        // Auto-detect API base URL (Env var for Render, window.location for localhost/unified)
+        const envApiUrl = import.meta.env.VITE_API_URL;
+        setApiUrl(envApiUrl || window.location.origin);
         // Check server status
         checkServerStatus();
     }, []);
