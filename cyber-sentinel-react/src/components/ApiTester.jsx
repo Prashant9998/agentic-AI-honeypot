@@ -27,7 +27,12 @@ function ApiTester({ onBack }) {
     useEffect(() => {
         // Auto-detect API base URL (Env var for Render, window.location for localhost/unified)
         const envApiUrl = import.meta.env.VITE_API_URL;
-        setApiUrl(envApiUrl || window.location.origin);
+        const envApiUrl = import.meta.env.VITE_API_URL;
+        if (envApiUrl && !envApiUrl.startsWith('http')) {
+            setApiUrl(`https://${envApiUrl}`);
+        } else {
+            setApiUrl(envApiUrl || window.location.origin);
+        }
         // Check server status
         checkServerStatus();
     }, []);
