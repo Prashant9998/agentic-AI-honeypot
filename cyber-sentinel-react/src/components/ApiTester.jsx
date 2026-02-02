@@ -27,7 +27,6 @@ function ApiTester({ onBack }) {
     useEffect(() => {
         // Auto-detect API base URL (Env var for Render, window.location for localhost/unified)
         const envApiUrl = import.meta.env.VITE_API_URL;
-        const envApiUrl = import.meta.env.VITE_API_URL;
         if (envApiUrl && !envApiUrl.startsWith('http')) {
             setApiUrl(`https://${envApiUrl}`);
         } else {
