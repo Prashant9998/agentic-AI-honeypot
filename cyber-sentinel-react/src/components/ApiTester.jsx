@@ -45,13 +45,13 @@ function ApiTester({ onBack }) {
             } else {
                 setServerStatus({
                     online: false,
-                    message: '❌ Server Offline - Start with: py honeypot_api.py'
+                    message: '❌ Server Offline - Backend not connected'
                 });
             }
         } catch (error) {
             setServerStatus({
                 online: false,
-                message: '❌ Server Offline - Start with: py honeypot_api.py'
+                message: '❌ Server Offline - Backend not connected'
             });
         }
     };
