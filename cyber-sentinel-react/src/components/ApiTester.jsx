@@ -27,18 +27,25 @@ function ApiTester({ onBack }) {
     useEffect(() => {
         // Auto-detect API base URL (Env var for Render, window.location for localhost/unified)
         const envApiUrl = import.meta.env.VITE_API_URL;
+        let url = '';
+
         if (envApiUrl && !envApiUrl.startsWith('http')) {
-            setApiUrl(`https://${envApiUrl}`);
+            url = `https://${envApiUrl}`;
         } else {
-            setApiUrl(envApiUrl || window.location.origin);
+            url = envApiUrl || window.location.origin;
         }
-        // Check server status
-        checkServerStatus();
+
+        setApiUrl(url);
+        // Check server status with the determined URL immediately
+        checkServerStatus(url);
     }, []);
 
-    const checkServerStatus = async () => {
+    const checkServerStatus = async (urlToCheck) => {
+        // Use argument if provided, otherwise fallback to state (for button clicks)
+        const targetUrl = urlToCheck || apiUrl;
+
         try {
-            const response = await fetch(`${apiUrl}/api/health`);
+            const response = await fetch(`${targetUrl}/api/health`);
             const data = await response.json();
 
             if (response.ok) {
@@ -49,13 +56,13 @@ function ApiTester({ onBack }) {
             } else {
                 setServerStatus({
                     online: false,
-                    message: `❌ Server Offline - Backend not connected (${apiUrl})`
+                    message: `❌ Server Offline - Backend not connected (${targetUrl})`
                 });
             }
         } catch (error) {
             setServerStatus({
                 online: false,
-                message: `❌ Server Offline - Connection failed to ${apiUrl}`
+                message: `❌ Server Offline - Connection failed to ${targetUrl}`
             });
         }
     };
