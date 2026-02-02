@@ -49,13 +49,13 @@ function ApiTester({ onBack }) {
             } else {
                 setServerStatus({
                     online: false,
-                    message: '❌ Server Offline - Backend not connected'
+                    message: `❌ Server Offline - Backend not connected (${apiUrl})`
                 });
             }
         } catch (error) {
             setServerStatus({
                 online: false,
-                message: '❌ Server Offline - Backend not connected'
+                message: `❌ Server Offline - Connection failed to ${apiUrl}`
             });
         }
     };
