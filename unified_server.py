@@ -262,6 +262,38 @@ async def root_honeypot(request: Request, x_api_key: str = Header(None, alias="x
             "message": str(e)
         }
 
+# Endpoint to finalize session and send GUVI callback
+class FinalizeRequest(BaseModel):
+    sessionId: str
+    conversationHistory: Optional[List[Dict[str, Any]]] = []
+
+@app.post("/api/finalize-session")
+async def finalize_session_endpoint(request: FinalizeRequest, x_api_key: str = Header(None, alias="x-api-key")):
+    """
+    Finalize a honeypot session and send results to GUVI.
+    MANDATORY: Call this after conversation ends for hackathon scoring.
+    """
+    verify_api_key(x_api_key)
+    
+    from honeypot_agent import finalize_session
+    
+    result = finalize_session(
+        session_id=request.sessionId,
+        conversation_history=request.conversationHistory or []
+    )
+    
+    # Log the finalization
+    interactions.append({
+        "type": "session_finalized",
+        "timestamp": datetime.now().isoformat(),
+        "data": {
+            "session_id": request.sessionId,
+            "guvi_callback_sent": result.get("guvi_callback", {}).get("callback_sent", False)
+        }
+    })
+    
+    return result
+
 # ============ SERVE REACT FRONTEND ============
 
 # Check if dist folder exists

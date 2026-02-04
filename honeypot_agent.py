@@ -5,7 +5,11 @@ AI agent that engages scammers in conversation and extracts intelligence
 
 import random
 import re
+import requests
 from typing import Dict, List, Any, Optional
+
+# GUVI Callback URL (mandatory for hackathon scoring)
+GUVI_CALLBACK_URL = "https://hackathon.guvi.in/api/updateHoneyPotFinalResult"
 
 # Session storage for multi-turn conversations
 sessions: Dict[str, Dict] = {}
@@ -209,4 +213,74 @@ def get_session_intelligence(session_id: str, conversation_history: List[Dict]) 
         "totalMessagesExchanged": session.get("turn_count", 0),
         "extractedIntelligence": intelligence,
         "agentNotes": f"Session state: {session.get('state', 'unknown')}"
+    }
+
+def send_to_guvi_callback(session_id: str, conversation_history: List[Dict]) -> Dict[str, Any]:
+    """
+    MANDATORY: Send final intelligence to GUVI evaluation endpoint.
+    This is required for hackathon scoring.
+    """
+    session = sessions.get(session_id, {})
+    intelligence = extract_intelligence(conversation_history)
+    
+    # Build payload matching exact GUVI specification
+    payload = {
+        "sessionId": session_id,
+        "scamDetected": session.get("scam_detected", True),
+        "totalMessagesExchanged": session.get("turn_count", 0),
+        "extractedIntelligence": {
+            "bankAccounts": intelligence.get("bankAccounts", []),
+            "upiIds": intelligence.get("upiIds", []),
+            "phishingLinks": intelligence.get("phishingLinks", []),
+            "phoneNumbers": intelligence.get("phoneNumbers", []),
+            "suspiciousKeywords": intelligence.get("suspiciousKeywords", [])
+        },
+        "agentNotes": f"Scammer engaged for {session.get('turn_count', 0)} turns. Detected tactics: {', '.join(session.get('keywords', ['unknown']))}"
+    }
+    
+    try:
+        response = requests.post(
+            GUVI_CALLBACK_URL,
+            json=payload,
+            timeout=10
+        )
+        
+        return {
+            "status": "success",
+            "callback_sent": True,
+            "guvi_response_status": response.status_code,
+            "payload": payload
+        }
+    except requests.exceptions.Timeout:
+        return {
+            "status": "error",
+            "message": "GUVI callback timed out",
+            "payload": payload
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "payload": payload
+        }
+
+def finalize_session(session_id: str, conversation_history: List[Dict]) -> Dict[str, Any]:
+    """
+    Finalize a session and send results to GUVI.
+    Call this when conversation is complete.
+    """
+    # Send to GUVI
+    callback_result = send_to_guvi_callback(session_id, conversation_history)
+    
+    # Get intelligence report
+    intelligence_report = get_session_intelligence(session_id, conversation_history)
+    
+    # Clean up session
+    if session_id in sessions:
+        del sessions[session_id]
+    
+    return {
+        "finalized": True,
+        "guvi_callback": callback_result,
+        "intelligence_report": intelligence_report
     }
