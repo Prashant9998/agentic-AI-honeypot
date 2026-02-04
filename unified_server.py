@@ -46,6 +46,10 @@ def verify_api_key(x_api_key: Optional[str] = Header(None)):
 
 # ============ API ENDPOINTS ============
 
+@app.get("/api/version")
+async def api_version():
+    return {"version": "2.0.0", "deployed_at": datetime.now().isoformat(), "features": ["honeypot", "voice", "flexible-validation"]}
+
 @app.get("/api/health")
 async def health_check():
     return {
