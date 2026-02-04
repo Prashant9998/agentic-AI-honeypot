@@ -2,10 +2,16 @@
 """
 Cyber Sentinel - Honeypot API Server
 Main entry point for the unified server
+Last updated: 2026-02-04 22:36 IST - Force rebuild for Render
 """
 
+# Import the FastAPI app from unified_server
+# This includes ALL endpoints: honeypot, voice-detection, finalize-session
 from unified_server import app
 import uvicorn
+
+# Expose app for uvicorn: `uvicorn honeypot_api:app`
+__all__ = ['app']
 
 if __name__ == "__main__":
     print("=" * 60)
