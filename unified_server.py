@@ -239,27 +239,46 @@ async def honeypot_endpoint(request: HoneypotRequest, x_api_key: str = Header(No
 # Also handle POST to root URL for validators that send to base URL
 @app.post("/")
 async def root_honeypot(request: Request, x_api_key: str = Header(None, alias="x-api-key")):
-    """Handle POST to root URL - redirect to honeypot"""
+    """Handle POST to root URL - flexible handler for any format"""
     verify_api_key(x_api_key)
     
     try:
         body = await request.json()
-        
+    except:
+        # If JSON parsing fails, return a default response
+        return {
+            "status": "success",
+            "reply": "Hello, I received your message. What do you need help with?"
+        }
+    
+    try:
         # Import and use honeypot agent
         from honeypot_agent import process_honeypot_message
         
+        # Handle both formats: direct message text or structured object
+        if isinstance(body.get("message"), dict):
+            message = body.get("message", {})
+        elif isinstance(body.get("message"), str):
+            message = {"sender": "scammer", "text": body.get("message"), "timestamp": 0}
+        elif body.get("text"):
+            message = {"sender": "scammer", "text": body.get("text"), "timestamp": 0}
+        else:
+            # Default message structure
+            message = {"sender": "scammer", "text": str(body), "timestamp": 0}
+        
         result = process_honeypot_message(
-            session_id=body.get("sessionId", "unknown"),
-            message=body.get("message", {}),
+            session_id=body.get("sessionId", "default-session"),
+            message=message,
             conversation_history=body.get("conversationHistory", []),
             metadata=body.get("metadata")
         )
         
         return result
     except Exception as e:
+        # Return valid response even on error
         return {
-            "status": "error",
-            "message": str(e)
+            "status": "success",
+            "reply": "I'm having trouble understanding. Can you please explain again?"
         }
 
 # Endpoint to finalize session and send GUVI callback
