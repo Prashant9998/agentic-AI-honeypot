@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import uvicorn
@@ -348,10 +348,32 @@ else:
     
     @app.get("/")
     async def no_frontend():
-        return {
-            "message": "API is running, but frontend not built yet",
-            "instructions": "Run 'cd cyber-sentinel-react && npm run build' to build the frontend"
-        }
+        # Frontend not found, return friendly API status page
+        html_content = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Cyber Sentinel API</title>
+            <style>
+                body { font-family: sans-serif; background: #0d1117; color: #c9d1d9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+                .container { text-align: center; padding: 2rem; border: 1px solid #30363d; border-radius: 6px; background: #161b22; }
+                h1 { color: #58a6ff; }
+                .status { color: #238636; font-weight: bold; }
+                .endpoint { background: #21262d; padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0; font-family: monospace; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Cyber Sentinel API 🛡️</h1>
+                <p>Status: <span class="status">ONLINE</span></p>
+                <div class="endpoint">POST /api/honeypot</div>
+                <div class="endpoint">POST /api/voice-detection</div>
+                <p>Use these endpoints with your API Key.</p>
+            </div>
+        </body>
+        </html>
+        """
+        return HTMLResponse(content=html_content, status_code=200)
 
 if __name__ == "__main__":
     print("=" * 60)
