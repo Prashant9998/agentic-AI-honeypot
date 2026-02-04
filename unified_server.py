@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict, Any
 import uvicorn
 from datetime import datetime
 from pathlib import Path
@@ -185,6 +185,82 @@ async def detect_voice(request: VoiceDetectionRequest, x_api_key: str = Header(N
     })
     
     return result
+
+# ============ SCAM HONEYPOT API (Problem Statement 2) ============
+
+class MessageModel(BaseModel):
+    sender: str
+    text: str
+    timestamp: int
+
+class MetadataModel(BaseModel):
+    channel: Optional[str] = "SMS"
+    language: Optional[str] = "English"
+    locale: Optional[str] = "IN"
+
+class HoneypotRequest(BaseModel):
+    sessionId: str
+    message: MessageModel
+    conversationHistory: Optional[List[Dict[str, Any]]] = []
+    metadata: Optional[MetadataModel] = None
+
+@app.post("/api/honeypot")
+async def honeypot_endpoint(request: HoneypotRequest, x_api_key: str = Header(None, alias="x-api-key")):
+    """
+    Agentic Honeypot for Scam Detection.
+    Accepts scam messages and returns confused user responses.
+    """
+    # Validate API key
+    verify_api_key(x_api_key)
+    
+    # Import and use honeypot agent
+    from honeypot_agent import process_honeypot_message
+    
+    result = process_honeypot_message(
+        session_id=request.sessionId,
+        message=request.message.dict(),
+        conversation_history=request.conversationHistory or [],
+        metadata=request.metadata.dict() if request.metadata else None
+    )
+    
+    # Log the interaction
+    interactions.append({
+        "type": "honeypot",
+        "timestamp": datetime.now().isoformat(),
+        "data": {
+            "session_id": request.sessionId,
+            "scammer_message": request.message.text[:100],
+            "agent_reply": result.get("reply", "")[:100]
+        }
+    })
+    
+    return result
+
+# Also handle POST to root URL for validators that send to base URL
+@app.post("/")
+async def root_honeypot(request: Request, x_api_key: str = Header(None, alias="x-api-key")):
+    """Handle POST to root URL - redirect to honeypot"""
+    verify_api_key(x_api_key)
+    
+    try:
+        body = await request.json()
+        
+        # Import and use honeypot agent
+        from honeypot_agent import process_honeypot_message
+        
+        result = process_honeypot_message(
+            session_id=body.get("sessionId", "unknown"),
+            message=body.get("message", {}),
+            conversation_history=body.get("conversationHistory", []),
+            metadata=body.get("metadata")
+        )
+        
+        return result
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
 
 # ============ SERVE REACT FRONTEND ============
 
