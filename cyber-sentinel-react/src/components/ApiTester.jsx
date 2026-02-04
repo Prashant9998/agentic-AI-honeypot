@@ -30,12 +30,12 @@ function ApiTester({ onBack }) {
         let url = '';
 
         if (envApiUrl && !envApiUrl.startsWith('http')) {
-            // Check if it's the internal service name and replace with known public URL
-            if (envApiUrl.includes('cyber-sentinel-api')) {
-                url = 'https://agentic-ai-scam-honeypot.onrender.com';
-            } else {
-                url = `https://${envApiUrl}`;
+            // Add https:// and .onrender.com if not present
+            let fullUrl = envApiUrl;
+            if (!fullUrl.includes('.onrender.com')) {
+                fullUrl = `${fullUrl}.onrender.com`;
             }
+            url = `https://${fullUrl}`;
         } else {
             // Fallback to known public URL if env var is missing/empty
             url = envApiUrl || 'https://agentic-ai-scam-honeypot.onrender.com';
