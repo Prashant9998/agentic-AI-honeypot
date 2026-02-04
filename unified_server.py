@@ -199,28 +199,50 @@ class MetadataModel(BaseModel):
     locale: Optional[str] = "IN"
 
 class HoneypotRequest(BaseModel):
-    sessionId: str
-    message: MessageModel
+    sessionId: Optional[str] = "default-session"
+    message: Optional[Any] = None
     conversationHistory: Optional[List[Dict[str, Any]]] = []
-    metadata: Optional[MetadataModel] = None
+    metadata: Optional[Any] = None
 
 @app.post("/api/honeypot")
-async def honeypot_endpoint(request: HoneypotRequest, x_api_key: str = Header(None, alias="x-api-key")):
+async def honeypot_endpoint(request: Request, x_api_key: str = Header(None, alias="x-api-key")):
     """
     Agentic Honeypot for Scam Detection.
-    Accepts scam messages and returns confused user responses.
+    Flexible endpoint that accepts various input formats to prevent 422 errors.
     """
     # Validate API key
     verify_api_key(x_api_key)
     
+    try:
+        body = await request.json()
+    except:
+        return {"status": "success", "reply": "Hello? I cannot hear you properly."}
+
     # Import and use honeypot agent
     from honeypot_agent import process_honeypot_message
     
+    # Robust message extraction
+    msg_input = body.get("message", {})
+    if isinstance(msg_input, str):
+        message = {"sender": "scammer", "text": msg_input, "timestamp": 0}
+    elif isinstance(msg_input, dict):
+        message = {
+            "sender": msg_input.get("sender", "scammer"),
+            "text": msg_input.get("text", ""),
+            "timestamp": msg_input.get("timestamp", 0)
+        }
+    else:
+        message = {"sender": "scammer", "text": str(msg_input), "timestamp": 0}
+
+    # Ensure text is not empty
+    if not message["text"]:
+        message["text"] = "Hello"
+
     result = process_honeypot_message(
-        session_id=request.sessionId,
-        message=request.message.dict(),
-        conversation_history=request.conversationHistory or [],
-        metadata=request.metadata.dict() if request.metadata else None
+        session_id=body.get("sessionId", "default-session"),
+        message=message,
+        conversation_history=body.get("conversationHistory", []),
+        metadata=body.get("metadata") if isinstance(body.get("metadata"), dict) else None
     )
     
     # Log the interaction
@@ -228,8 +250,8 @@ async def honeypot_endpoint(request: HoneypotRequest, x_api_key: str = Header(No
         "type": "honeypot",
         "timestamp": datetime.now().isoformat(),
         "data": {
-            "session_id": request.sessionId,
-            "scammer_message": request.message.text[:100],
+            "session_id": body.get("sessionId"),
+            "scammer_message": message["text"][:100],
             "agent_reply": result.get("reply", "")[:100]
         }
     })
