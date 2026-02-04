@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -145,6 +145,47 @@ async def get_interactions(api_key: str = Header(None, alias="X-API-KEY")):
         "interactions": interactions[-10:]  # Last 10
     }
 
+# ============ VOICE DETECTION API ============
+
+class VoiceDetectionRequest(BaseModel):
+    language: str
+    audioFormat: str
+    audioBase64: str
+
+@app.post("/api/voice-detection")
+async def detect_voice(request: VoiceDetectionRequest, x_api_key: str = Header(None, alias="x-api-key")):
+    """
+    Detect if voice audio is AI-generated or Human.
+    Supports: Tamil, English, Hindi, Malayalam, Telugu
+    """
+    # Validate API key
+    verify_api_key(x_api_key)
+    
+    # Validate audio format
+    if request.audioFormat.lower() != "mp3":
+        return {
+            "status": "error",
+            "message": "Only MP3 format is supported"
+        }
+    
+    # Import and use voice detector
+    from voice_detector import classify_voice
+    
+    result = classify_voice(request.audioBase64, request.language)
+    
+    # Log the interaction
+    interactions.append({
+        "type": "voice_detection",
+        "timestamp": datetime.now().isoformat(),
+        "data": {
+            "language": request.language,
+            "classification": result.get("classification", "unknown"),
+            "confidence": result.get("confidenceScore", 0)
+        }
+    })
+    
+    return result
+
 # ============ SERVE REACT FRONTEND ============
 
 # Check if dist folder exists
@@ -156,12 +197,24 @@ if dist_path.exists():
     
     # Serve index.html for all other routes (SPA routing)
     @app.get("/{full_path:path}")
-    async def serve_frontend(full_path: str):
+    async def serve_frontend(full_path: str, request: Request = None):
         # If path starts with /api, it's already handled above
         if full_path.startswith("api/"):
             raise HTTPException(status_code=404, detail="API endpoint not found")
+            
+        # SMART HANDLING: If client asks for JSON (like Validator tools), return JSON info
+        # instead of HTML, even at the root path.
+        if request:
+            accept = request.headers.get("accept", "")
+            if "application/json" in accept:
+                return {
+                    "status": "online",
+                    "project": "Cyber Sentinel",
+                    "message": "You have reached the root URL. The Frontend is served here for browsers. For API, use /api/login, /api/ivr, etc.",
+                    "documentation": "/docs"
+                }
         
-        # Serve index.html for all frontend routes
+        # Serve index.html for all frontend routes (Browsers)
         return FileResponse(str(dist_path / "index.html"))
 else:
     print("⚠️  Warning: React build folder not found. Run 'npm run build' first!")
