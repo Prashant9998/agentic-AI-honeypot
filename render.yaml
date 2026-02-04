@@ -1,7 +1,7 @@
 services:
   # 1. The Backend API (Python)
   - type: web
-    name: cyber-sentinel-api
+    name: agentic-ai-scam-honeypot
     env: python
     region: singapore
     plan: free
@@ -28,5 +28,5 @@ services:
       - key: VITE_API_URL
         fromService:
           type: web
-          name: cyber-sentinel-api
+          name: agentic-ai-scam-honeypot
           property: host
