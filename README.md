@@ -5,7 +5,6 @@ Welcome to **Cyber Sentinel**, an AI-powered honeypot system designed to detect 
 ## 📁 Project Structure
 
 ```
-
 hack/
 ├── 📄 README.md                 # This file
 ├── 📄 requirements.txt          # Python dependencies
