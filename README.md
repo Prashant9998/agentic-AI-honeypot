@@ -2,30 +2,7 @@
 
 Welcome to **Cyber Sentinel**, an AI-powered honeypot system designed to detect and analyze scam attempts!
 
-## 📁 Project Structure
 
-```
-hack/
-├── 📄 README.md                 # This file
-├── 📄 requirements.txt          # Python dependencies
-├── 📄 vercel.json              # Vercel deployment config
-├── 📄 render.yaml              # Render deployment config
-├── 📄 .gitignore               # Git ignore rules
-│
-├── 🐍 Backend Files
-│   ├── unified_server.py       # Main FastAPI server (USE THIS!)
-│   └── honeypot_api.py         # Server entry point
-│
-├── ⚛️  cyber-sentinel-react/   # React Frontend
-│   ├── src/                    # Source code
-│   ├── dist/                   # Built files
-│   ├── package.json           # Dependencies
-│   └── vite.config.js         # Vite config
-│
-└── 📚 docs/                    # Documentation
-    ├── DEPLOYMENT.md           # Complete deployment guide
-    └── TROUBLESHOOTING.md      # Common issues & fixes
-```
 
 ## 🎯 Quick Start
 
