@@ -11,7 +11,7 @@ Welcome to **Cyber Sentinel**, an AI-powered honeypot system designed to detect 
 1. **Install Python dependencies:**
    ```bash
    pip install -r requirements.txt
-   ```
+   ```''
 
 2. **Start the server:**
    ```bash
