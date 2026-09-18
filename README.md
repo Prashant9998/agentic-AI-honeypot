@@ -33,6 +33,8 @@ Welcome to **Cyber Sentinel**, an AI-powered honeypot system designed to detect 
 - Uvicorn - ASGI server
 - Pydantic - Data validation
 
+
+
 **Frontend:**
 - React 18
 - Vite - Fast build tool
