@@ -3,7 +3,6 @@
 Welcome to **Cyber Sentinel**, an AI-powered honeypot system designed to detect and analyze scam attempts!
 
 
-
 ## 🎯 Quick Start
 
 ### Local Development
